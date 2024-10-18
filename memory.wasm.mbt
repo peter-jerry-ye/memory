@@ -55,8 +55,14 @@ pub fn load64(self : Memory, offset : Int) -> Int64? {
     let b7 = self.bytes[offset + 6].to_int64()
     let b8 = self.bytes[offset + 7].to_int64()
     Some(
-      (b8 << 56) | (b7 << 48) | (b6 << 40) | (b5 << 32) | (b4 << 24) | (b3 << 16) |
-      (b2 << 8) | b1,
+      (b8 << 56) |
+      (b7 << 48) |
+      (b6 << 40) |
+      (b5 << 32) |
+      (b4 << 24) |
+      (b3 << 16) |
+      (b2 << 8) |
+      b1,
     )
   }
 }
