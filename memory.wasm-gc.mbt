@@ -152,7 +152,7 @@ priv struct Chunk {
 } derive(Show)
 
 priv struct LinearMemory {
-  mut start : Chunk
+  start : Chunk
   mut end : Chunk
 }
 
@@ -177,7 +177,7 @@ fn to_array(self : LinearMemory) -> Array[(Memory, Bool)] {
 }
 
 let memory : LinearMemory = {
-  let length = memory_size_ffi().lsl(16)
+  let length = memory_size_ffi() << 16
   let chunk = {
     memory: { offset: 0, length },
     occupied: false,
@@ -209,13 +209,13 @@ fn Memory::locate_chunk(m : Memory) -> Chunk? {
 }
 
 fn grow(self : LinearMemory, size : Int) -> Bool {
-  let delta = size.lsr(16) + 1
+  let delta = (size << 16) + 1
   let old_size = memory_size_ffi()
   let errno = memory_grow_ffi(delta)
   if errno != -1 {
     if self.end.occupied {
       let chunk : Chunk = {
-        memory: { offset: old_size.lsl(16), length: delta.lsl(16) },
+        memory: { offset: old_size << 16, length: delta << 16 },
         occupied: false,
         prev: Some(self.end),
         next: None,
@@ -225,7 +225,7 @@ fn grow(self : LinearMemory, size : Int) -> Bool {
     } else {
       self.end.memory = {
         ..self.end.memory,
-        length: self.end.memory.length + delta.lsl(16),
+        length: self.end.memory.length + (delta << 16),
       }
     }
     true

@@ -17,7 +17,7 @@ pub(readonly) struct Memory {
   offset : Int
   length : Int
   priv bytes : Bytes
-} derive(Debug)
+} derive(Show)
 
 /// Load Byte 读取字节
 pub fn load8(self : Memory, offset : Int) -> Int? {
@@ -55,15 +55,21 @@ pub fn load64(self : Memory, offset : Int) -> Int64? {
     let b7 = self.bytes[offset + 6].to_int64()
     let b8 = self.bytes[offset + 7].to_int64()
     Some(
-      (b8 << 56) | (b7 << 48) | (b6 << 40) | (b5 << 32) | (b4 << 24) | (b3 << 16) |
-      (b2 << 8) | b1,
+      (b8 << 56) |
+      (b7 << 48) |
+      (b6 << 40) |
+      (b5 << 32) |
+      (b4 << 24) |
+      (b3 << 16) |
+      (b2 << 8) |
+      b1,
     )
   }
 }
 
 /// Load Float64 读取64位浮点数
 pub fn loadf64(self : Memory, offset : Int) -> Double? {
-  self.load64(offset).map(reinterpret_as_double)
+  self.load64(offset).map(Int64::reinterpret_as_double)
 }
 
 /// Store Byte 存储字节
@@ -111,7 +117,7 @@ pub fn storef64(self : Memory, offset : Int, value : Double) -> Unit? {
   if offset < 0 || offset + 8 > self.length {
     None
   } else {
-    self.store64(offset, value.reinterpret_as_i64())
+    self.store64(offset, value.reinterpret_as_int64())
   }
 }
 
@@ -133,10 +139,10 @@ pub fn store_bytes(self : Memory, bytes : Bytes) -> Unit {
 }
 
 extern "wasm" fn get_bytes(offset : Int) -> Bytes =
-  #|(func (param i32) (result i32) local.get 0 i32.const 8 i32.sub call $rael.incref local.get 0 i32.const 8 i32.sub)
+  #|(func (param i32) (result i32) local.get 0 i32.const 8 i32.sub call $moonbit.incref local.get 0 i32.const 8 i32.sub)
 
 extern "wasm" fn get_offset(bytes : Bytes) -> Int =
-  #|(func (param i32) (result i32) local.get 0 call $rael.decref local.get 0 i32.const 8 i32.add)
+  #|(func (param i32) (result i32) local.get 0 call $moonbit.decref local.get 0 i32.const 8 i32.add)
 
 extern "wasm" fn alloc(bytes : Bytes) =
   #|(func (param i32))
@@ -184,7 +190,7 @@ pub fn reallocate(self : Memory, _alignment : Int, new_length : Int) -> Memory? 
     self.free() |> ignore
     None
   } else {
-    let new = allocate(new_length)?
+    guard let Some(new) = allocate(new_length) else { _ => None }
     new.bytes.blit(0, self.bytes, 0, new_length)
     self.free() |> ignore
     Some(new)
